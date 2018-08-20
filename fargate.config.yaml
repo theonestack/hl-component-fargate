@@ -1,0 +1,77 @@
+component_version: 1.0.0
+
+maximum_availability_zones: 5
+log_retention: 7
+
+# health_check_grace_period: 60
+#
+# cpu: 256
+# memory: 256
+#
+# volumes:
+#   - data-volume:/data
+#
+# task_definition:
+#   data:
+#     repo: some.custom.repo
+#     image: data
+#     tag_param: DataTag
+#     not_essential: true
+#     env_vars:
+#       KEY: value
+#   api:
+#     repo: some.custom.repo
+#     image: api
+#     tag_param: ApiTag
+#     ports:
+#       - 8080
+#     env_vars:
+#       KEY: value
+#     mounts:
+#       - data-volume:/data:ro
+
+# ip_blocks:
+#   local:
+#     - 169.254.169.254/32
+#
+# security_group:
+#   - rules:
+#       -
+#         IpProtocol: tcp
+#         FromPort: 80
+#         ToPort: 80
+#     ips:
+#       - local
+
+# targetgroup:
+#   name: api
+#   container: api
+#   port: 8080
+#   protocol: http
+#   listener: http
+#   healthcheck:
+#     path: /status
+#     code: 200
+#   rules:
+#     - path: /v2/*
+#       host: api.*
+#       priority: 10
+#     - path: /api/v1/*
+#       host: app.*
+#       priority: 20
+#   tags:
+#       Name: api
+
+# scaling_policy:
+#   min: 2
+#   max: 4
+#   up:
+#     cooldown: 150
+#     threshold: 70
+#     evaluation_periods: 5
+#     adjustment: 2
+#   down:
+#     cooldown: 600
+#     threshold: 70
+#     evaluation_periods: 5
+#     adjustment: -1
