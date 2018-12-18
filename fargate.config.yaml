@@ -3,6 +3,8 @@ component_version: 1.0.0
 maximum_availability_zones: 5
 log_retention: 7
 
+public_ip: false
+
 # health_check_grace_period: 60
 #
 # cpu: 256
