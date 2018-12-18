@@ -312,7 +312,7 @@ CloudFormation do
     Property('NetworkConfiguration',
       ({
         AwsvpcConfiguration: {
-          AssignPublicIp: "DISABLED",
+          AssignPublicIp: public_ip ? "ENABLED" : "DISABLED",
           SecurityGroups: [ Ref(sg_name) ],
           Subnets: az_conditional_resources('SubnetCompute', maximum_availability_zones)
         }
