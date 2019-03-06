@@ -45,8 +45,14 @@ public_ip: false
 #     ips:
 #       - local
 
+# task_ingress_rules:
+#   -
+#     from_port: 3000
+#     to_port: 3000
+
 # targetgroup:
 #   name: api
+#   type: ip
 #   container: api
 #   port: 8080
 #   protocol: http
