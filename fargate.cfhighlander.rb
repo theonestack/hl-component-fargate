@@ -11,6 +11,8 @@ CfhighlanderTemplate do
     ComponentParam 'VPCId', type: 'AWS::EC2::VPC::Id'
     ComponentParam 'EcsCluster'
     ComponentParam 'StackOctet', isGlobal: true
+    ComponentParam 'Subnets'
+    ComponentParam 'LoadbalancerSecurityGroup'
 
     unless defined? security_group
       ComponentParam 'SecurityGroupBackplane'

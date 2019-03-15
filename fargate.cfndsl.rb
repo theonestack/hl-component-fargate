@@ -271,6 +271,11 @@ CloudFormation do
       end
 
       targetgroup_arn = Ref('TaskTargetGroup')
+
+      Output("TaskTargetGroup") {
+        Value(Ref('TaskTargetGroup'))
+        Export FnSub("${EnvironmentName}-#{component_name}-targetgroup")
+      }
     else
       targetgroup_arn = Ref('TargetGroup')
     end
@@ -294,6 +299,19 @@ CloudFormation do
     sg_name = 'ServiceSecurityGroup'
   end
 
+  task_ingress_rules.each do |rule|
+
+    EC2_SecurityGroupIngress(:AllowConnectionBetweenContainerAndLB) {
+      Description 'Allow Connection Between Container And LB'
+      GroupId Ref(:ServiceSecurityGroup)
+      SourceSecurityGroupId Ref(:LoadbalancerSecurityGroup)
+      IpProtocol 'tcp'
+      FromPort rule['from_port']
+      ToPort rule['to_port']
+    }
+
+  end if defined? task_ingress_rules
+
   ECS_Service('Service') do
     Cluster Ref("EcsCluster")
     DesiredCount Ref('DesiredCount')
@@ -314,7 +332,7 @@ CloudFormation do
         AwsvpcConfiguration: {
           AssignPublicIp: public_ip ? "ENABLED" : "DISABLED",
           SecurityGroups: [ Ref(sg_name) ],
-          Subnets: az_conditional_resources('SubnetCompute', maximum_availability_zones)
+          Subnets: FnSplit(',', Ref('Subnets'))
         }
       })
     )
@@ -420,5 +438,4 @@ CloudFormation do
     }
 
   end
-
 end
