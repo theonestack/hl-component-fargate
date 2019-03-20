@@ -314,7 +314,7 @@ CloudFormation do
         AwsvpcConfiguration: {
           AssignPublicIp: public_ip ? "ENABLED" : "DISABLED",
           SecurityGroups: [ Ref(sg_name) ],
-          Subnets: use_subnet_list ? Ref('Subnets') : az_conditional_resources('SubnetCompute', maximum_availability_zones)
+          Subnets: use_subnet_list ? FnSplit(',', Ref('Subnets')) : az_conditional_resources('SubnetCompute', maximum_availability_zones)
         }
       })
     )
