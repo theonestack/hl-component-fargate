@@ -29,9 +29,10 @@ CfhighlanderTemplate do
 
     ComponentParam 'EnableScaling', 'false', allowedValues: ['true','false']
 
+    ComponentParam "Subnets", '', type: 'CommaDelimitedList' if use_subnet_list
     maximum_availability_zones.times do |az|
-      ComponentParam "SubnetCompute#{az}"
-    end
+      ComponentParam "SubnetCompute#{az}", ''
+    end unless use_subnet_list
 
     #create component params for service image tag parameters
     task_definition.each do |task_def, task|

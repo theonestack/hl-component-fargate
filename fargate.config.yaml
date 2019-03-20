@@ -5,6 +5,8 @@ log_retention: 7
 
 public_ip: false
 
+use_subnet_list: false
+
 # health_check_grace_period: 60
 #
 # cpu: 256

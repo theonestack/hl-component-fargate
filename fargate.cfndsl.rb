@@ -1,6 +1,6 @@
 CloudFormation do
 
-  az_conditions_resources('SubnetCompute', maximum_availability_zones)
+  az_conditions_resources('SubnetCompute', maximum_availability_zones) unless use_subnet_list
 
   log_retention = 7 unless defined?(log_retention)
   Resource('LogGroup') {
@@ -314,7 +314,7 @@ CloudFormation do
         AwsvpcConfiguration: {
           AssignPublicIp: public_ip ? "ENABLED" : "DISABLED",
           SecurityGroups: [ Ref(sg_name) ],
-          Subnets: az_conditional_resources('SubnetCompute', maximum_availability_zones)
+          Subnets: use_subnet_list ? Ref('Subnets') : az_conditional_resources('SubnetCompute', maximum_availability_zones)
         }
       })
     )

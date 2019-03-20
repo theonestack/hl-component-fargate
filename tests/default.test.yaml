@@ -1,0 +1,14 @@
+test_metadata:
+  type: config
+  name: default config
+  description: default component configuration
+
+
+component_version: 1.0.0
+
+maximum_availability_zones: 5
+log_retention: 7
+
+public_ip: false
+
+use_subnet_list: false

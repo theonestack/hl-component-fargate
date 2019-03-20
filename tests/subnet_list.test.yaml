@@ -1,0 +1,38 @@
+test_metadata:
+  type: config
+  name: renders subnets list
+  description: renders subnets list
+
+
+public_ip: false
+
+use_subnet_list: true
+
+maximum_availability_zones: 5
+
+health_check_grace_period: 60
+
+cpu: 256
+memory: 256
+
+volumes:
+  - data-volume:/data
+
+task_definition:
+  data:
+    repo: some.custom.repo
+    image: data
+    tag_param: DataTag
+    not_essential: true
+    env_vars:
+      KEY: value
+  api:
+    repo: some.custom.repo
+    image: api
+    tag_param: ApiTag
+    ports:
+      - 8080
+    env_vars:
+      KEY: value
+    mounts:
+      - data-volume:/data:ro
