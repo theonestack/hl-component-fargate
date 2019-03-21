@@ -40,6 +40,7 @@ CloudFormation do
 
     task_def.merge!({ MemoryReservation: task['memory'] }) if task.has_key?('memory')
     task_def.merge!({ Cpu: task['cpu'] }) if task.has_key?('cpu')
+    task_def.merge!({ ReadonlyRootFilesystem: task['read_only_root']}) if task.has_key?('read_only_root')
 
     if !(task['env_vars'].nil?)
       task['env_vars'].each do |name,value|
