@@ -275,7 +275,7 @@ CloudFormation do
 
       Output("TaskTargetGroup") {
         Value(Ref('TaskTargetGroup'))
-        Export FnSub("${EnvironmentName}-#{component_name}-targetgroup")
+        Export FnSub("${EnvironmentName}-#{component_name}-#{targetgroup['name']}-targetgroup")
       }
     else
       targetgroup_arn = Ref('TargetGroup')
