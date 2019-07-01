@@ -59,6 +59,7 @@ CloudFormation do
 
     task_def.merge!({Environment: env_vars }) if env_vars.any?
 
+
     # add links
     if task.key?('links')
       task['links'].each do |links|
@@ -68,9 +69,7 @@ CloudFormation do
 
     # add entrypoint
     if task.key?('entrypoint')
-      task['entrypoint'].each do |entrypoint|
-      task_def.merge!({ EntryPoint: entrypoint })
-      end
+      task_def.merge!({ EntryPoint: task['entrypoint'] })
     end
 
     # By default Essential is true, switch to false if `not_essential: true`
@@ -108,6 +107,7 @@ CloudFormation do
     task_def.merge!({Command: task['command'] }) if task.key?('command')
     task_def.merge!({HealthCheck: task['healthcheck'] }) if task.key?('healthcheck')
     task_def.merge!({WorkingDirectory: task['working_dir'] }) if task.key?('working_dir')
+    task_def.merge!({User: task['user'] }) if task.key?('user')
 
     definitions << task_def
 

@@ -1,0 +1,13 @@
+test_metadata:
+  type: config
+  name: specify_user
+  description: Adding functionality to specify user the task starts as
+
+
+task_definition:
+  api:
+    repo: somerepo
+    image: backend
+    tag_param: ApiTag
+    user: www-data
+    entrypoint: ["/usr/local/bin/entrypoint.sh"]
