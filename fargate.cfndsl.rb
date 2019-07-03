@@ -59,7 +59,6 @@ CloudFormation do
 
     task_def.merge!({Environment: env_vars }) if env_vars.any?
 
-
     # add links
     if task.key?('links')
       task['links'].each do |links|
@@ -393,7 +392,7 @@ CloudFormation do
       ScalingTargetId Ref(:ServiceScalingTarget)
       StepScalingPolicyConfiguration({
         AdjustmentType: "ChangeInCapacity",
-        Cooldown: scaling_policy['up']['cooldown'] || 900,
+        Cooldown: scaling_policy['down']['cooldown'] || 900,
         MetricAggregationType: "Average",
         StepAdjustments: [{ ScalingAdjustment: scaling_policy['down']['adjustment'].to_s, MetricIntervalLowerBound: 0 }]
       })
