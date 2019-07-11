@@ -404,14 +404,14 @@ CloudFormation do
     default_alarm['statistic'] = 'Average'
     default_alarm['period'] = '60'
     default_alarm['evaluation_periods'] = '5'
-    default_alarm['dimentions'] = [
+    default_alarm['dimensions'] = [
       { Name: 'ServiceName', Value: FnGetAtt(:Service,:Name)},
       { Name: 'ClusterName', Value: Ref('EcsCluster')}
     ]
 
     CloudWatch_Alarm(:ServiceScaleUpAlarm) {
       Condition 'IsScalingEnabled'
-      AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} ecs scale down alarm"])
+      AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} ecs scale up alarm"])
       MetricName scaling_policy['up']['metric_name'] || default_alarm['metric_name']
       Namespace scaling_policy['up']['namespace'] || default_alarm['namespace']
       Statistic scaling_policy['up']['statistic'] || default_alarm['statistic']
@@ -420,7 +420,7 @@ CloudFormation do
       Threshold scaling_policy['up']['threshold'].to_s
       AlarmActions [Ref(:ServiceScalingUpPolicy)]
       ComparisonOperator 'GreaterThanThreshold'
-      Dimensions scaling_policy['up']['dimentions'] || default_alarm['dimentions']
+      Dimensions scaling_policy['up']['dimensions'] || default_alarm['dimensions']
     }
 
     CloudWatch_Alarm(:ServiceScaleDownAlarm) {
@@ -434,7 +434,7 @@ CloudFormation do
       Threshold scaling_policy['down']['threshold'].to_s
       AlarmActions [Ref(:ServiceScalingDownPolicy)]
       ComparisonOperator 'LessThanThreshold'
-      Dimensions scaling_policy['down']['dimentions'] || default_alarm['dimentions']
+      Dimensions scaling_policy['down']['dimensions'] || default_alarm['dimensions']
     }
 
   end
