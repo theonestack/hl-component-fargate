@@ -421,6 +421,7 @@ CloudFormation do
       AlarmActions [Ref(:ServiceScalingUpPolicy)]
       ComparisonOperator 'GreaterThanThreshold'
       Dimensions scaling_policy['up']['dimensions'] || default_alarm['dimensions']
+      TreatMissingData scaling_policy['up']['missing_data'] if scaling_policy['up'].has_key?('missing_data')
     }
 
     CloudWatch_Alarm(:ServiceScaleDownAlarm) {
@@ -435,6 +436,7 @@ CloudFormation do
       AlarmActions [Ref(:ServiceScalingDownPolicy)]
       ComparisonOperator 'LessThanThreshold'
       Dimensions scaling_policy['down']['dimensions'] || default_alarm['dimensions']
+      TreatMissingData scaling_policy['down']['missing_data'] if scaling_policy['down'].has_key?('missing_data')
     }
 
   end

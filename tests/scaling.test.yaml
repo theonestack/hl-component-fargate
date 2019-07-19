@@ -24,3 +24,4 @@ scaling_policy:
       threshold: 55
       evaluation_periods: 5
       adjustment: -1
+      missing_data: breaching
