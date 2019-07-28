@@ -206,11 +206,11 @@ CloudFormation do
 
     if targetgroup.has_key?('rules')
 
-      atributes = []
+      attributes = []
 
-      targetgroup['atributes'].each do |key,value|
-        atributes << { Key: key, Value: value }
-      end if targetgroup.has_key?('atributes')
+      targetgroup['attributes'].each do |key,value|
+        attributes << { Key: key, Value: value }
+      end if targetgroup.has_key?('attributes')
 
       tags = []
       tags << { Key: "Environment", Value: Ref("EnvironmentName") }
@@ -238,7 +238,7 @@ CloudFormation do
         end
 
         TargetType targetgroup['type'] if targetgroup.has_key?('type')
-        TargetGroupAttributes atributes if atributes.any?
+        TargetGroupAttributes attributes if attributes.any?
 
         Tags tags if tags.any?
       end
@@ -421,6 +421,7 @@ CloudFormation do
       AlarmActions [Ref(:ServiceScalingUpPolicy)]
       ComparisonOperator 'GreaterThanThreshold'
       Dimensions scaling_policy['up']['dimensions'] || default_alarm['dimensions']
+      TreatMissingData scaling_policy['up']['missing_data'] if scaling_policy['up'].has_key?('missing_data')
     }
 
     CloudWatch_Alarm(:ServiceScaleDownAlarm) {
@@ -435,6 +436,7 @@ CloudFormation do
       AlarmActions [Ref(:ServiceScalingDownPolicy)]
       ComparisonOperator 'LessThanThreshold'
       Dimensions scaling_policy['down']['dimensions'] || default_alarm['dimensions']
+      TreatMissingData scaling_policy['down']['missing_data'] if scaling_policy['down'].has_key?('missing_data')
     }
 
   end
