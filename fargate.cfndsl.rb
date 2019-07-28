@@ -206,11 +206,11 @@ CloudFormation do
 
     if targetgroup.has_key?('rules')
 
-      atributes = []
+      attributes = []
 
-      targetgroup['atributes'].each do |key,value|
-        atributes << { Key: key, Value: value }
-      end if targetgroup.has_key?('atributes')
+      targetgroup['attributes'].each do |key,value|
+        attributes << { Key: key, Value: value }
+      end if targetgroup.has_key?('attributes')
 
       tags = []
       tags << { Key: "Environment", Value: Ref("EnvironmentName") }
@@ -238,7 +238,7 @@ CloudFormation do
         end
 
         TargetType targetgroup['type'] if targetgroup.has_key?('type')
-        TargetGroupAttributes atributes if atributes.any?
+        TargetGroupAttributes attributes if attributes.any?
 
         Tags tags if tags.any?
       end
