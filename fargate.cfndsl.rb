@@ -394,7 +394,7 @@ CloudFormation do
         AdjustmentType: "ChangeInCapacity",
         Cooldown: scaling_policy['down']['cooldown'] || 900,
         MetricAggregationType: "Average",
-        StepAdjustments: [{ ScalingAdjustment: scaling_policy['down']['adjustment'].to_s, MetricIntervalLowerBound: 0 }]
+        StepAdjustments: [{ ScalingAdjustment: scaling_policy['down']['adjustment'].to_s, MetricIntervalUpperBound: 0 }]
       })
     }
 
