@@ -312,31 +312,39 @@ CloudFormation do
 
   end if defined? task_ingress_rules
 
-  ECS_Service('Service') do
-    Cluster Ref("EcsCluster")
-    DesiredCount Ref('DesiredCount')
-    DeploymentConfiguration ({
-        MinimumHealthyPercent: Ref('MinimumHealthyPercent'),
-        MaximumPercent: Ref('MaximumPercent')
-    })
-    TaskDefinition Ref('Task')
-    Property('HealthCheckGracePeriodSeconds', health_check_grace_period) if defined? health_check_grace_period
-    Property('LaunchType', "FARGATE")
+  if defined? task_definition
+    ECS_Service('Service') do
+      Cluster Ref("EcsCluster")
+      DesiredCount Ref('DesiredCount')
+      DeploymentConfiguration ({
+          MinimumHealthyPercent: Ref('MinimumHealthyPercent'),
+          MaximumPercent: Ref('MaximumPercent')
+      })
+      TaskDefinition Ref('Task')
+      Property('HealthCheckGracePeriodSeconds', health_check_grace_period) if defined? health_check_grace_period
+      Property('LaunchType', "FARGATE")
 
-    if service_loadbalancer.any?
-      LoadBalancers service_loadbalancer
+      if service_loadbalancer.any?
+        LoadBalancers service_loadbalancer
+      end
+
+      Property('NetworkConfiguration',
+        ({
+          AwsvpcConfiguration: {
+            AssignPublicIp: public_ip ? "ENABLED" : "DISABLED",
+            SecurityGroups: [ Ref(sg_name) ],
+            Subnets: FnSplit(',', Ref('Subnets'))
+          }
+        })
+      )
+
     end
 
-    Property('NetworkConfiguration',
-      ({
-        AwsvpcConfiguration: {
-          AssignPublicIp: public_ip ? "ENABLED" : "DISABLED",
-          SecurityGroups: [ Ref(sg_name) ],
-          Subnets: FnSplit(',', Ref('Subnets'))
-        }
-      })
-    )
-  end if defined? task_definition
+    Output('ServiceName') do
+      Value(FnGetAtt('Service', 'Name'))
+      Export FnSub("${EnvironmentName}-#{component_name}-ServiceName")
+    end
+  end
 
   if defined?(scaling_policy)
 
