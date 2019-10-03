@@ -1,5 +1,6 @@
 CloudFormation do
 
+  export = defined?(export_name) ? export_name : component_name
   az_conditions_resources('SubnetCompute', maximum_availability_zones)
 
   log_retention = 7 unless defined?(log_retention)
@@ -274,7 +275,7 @@ CloudFormation do
 
       Output("TaskTargetGroup") {
         Value(Ref('TaskTargetGroup'))
-        Export FnSub("${EnvironmentName}-#{component_name}-targetgroup")
+        Export FnSub("${EnvironmentName}-#{export}-targetgroup")
       }
     else
       targetgroup_arn = Ref('TargetGroup')
@@ -342,7 +343,7 @@ CloudFormation do
 
     Output('ServiceName') do
       Value(FnGetAtt('Service', 'Name'))
-      Export FnSub("${EnvironmentName}-#{component_name}-ServiceName")
+      Export FnSub("${EnvironmentName}-#{export}-ServiceName")
     end
   end
 
