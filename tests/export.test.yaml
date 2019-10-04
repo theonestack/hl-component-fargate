@@ -1,0 +1,14 @@
+test_metadata:
+  type: config
+  name: export
+  description: test overiding the export names
+
+# exports are created in a Fn::Sub so a parameter can be used to override the export name
+# export_name: ${BranchName}
+export_name: backend
+
+task_definition:
+  api:
+    repo: somerepo
+    image: backend
+    tag_param: ApiTag
