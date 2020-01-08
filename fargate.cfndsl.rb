@@ -1,19 +1,17 @@
 CloudFormation do
 
-  export = defined?(export_name) ? export_name : component_name
-  az_conditions_resources('SubnetCompute', maximum_availability_zones)
+  export = external_parameters.fetch(:export_name, external_parameters[:component_name])
 
-  log_retention = 7 unless defined?(log_retention)
-  Resource('LogGroup') {
-    Type 'AWS::Logs::LogGroup'
-    Property('LogGroupName', Ref('AWS::StackName'))
-    Property('RetentionInDays', "#{log_retention}")
+  Logs_LogGroup('LogGroup') {
+    LogGroupName Ref('AWS::StackName')
+    RetentionInDays "#{external_parameters[:log_retention]}"
   }
 
   Condition('IsScalingEnabled', FnEquals(Ref('EnableScaling'), 'true'))
 
   definitions, task_volumes = Array.new(2){[]}
 
+  task_definition = external_parameters.fetch(:task_definition, {})
   task_definition.each do |task_name, task|
 
     env_vars, mount_points, ports = Array.new(3){[]}
@@ -111,22 +109,22 @@ CloudFormation do
 
     definitions << task_def
 
-  end if defined? task_definition
+  end
 
   # add docker volumes
-  if defined?(volumes)
+  volumes = external_parameters.fetch(:volumes, [])
     volumes.each do |volume|
       parts = volume.split(':')
       object = { Name: parts[0]}
       object.merge!({ Host: { SourcePath: parts[1] }}) if parts[1]
       task_volumes << object
     end
-  end
 
   policies = []
+  iam_policies = external_parameters.fetch(:iam_policies, {})
   iam_policies.each do |name,policy|
     policies << iam_policy_allow(name,policy['action'],policy['resource'] || '*')
-  end if defined? iam_policies
+  end
 
   IAM_Role('TaskRole') do
     AssumeRolePolicyDocument ({
@@ -184,26 +182,27 @@ CloudFormation do
   ECS_TaskDefinition('Task') do
     ContainerDefinitions definitions
     NetworkMode 'awsvpc'
-    Property('RequiresCompatibilities', ['FARGATE'])
+    RequiresCompatibilities ['FARGATE']
     TaskRoleArn Ref('TaskRole')
-    Property('ExecutionRoleArn', Ref('ExecutionRole'))
+    ExecutionRoleArn Ref('ExecutionRole')
 
-    if defined?(cpu)
-      Property('Cpu', cpu)
+    if external_parameters[:cpu]
+      Cpu external_parameters[:cpu]
     end
 
-    if defined?(memory)
-      Property('Memory', memory)
+    if external_parameters[:memory]
+      Memory external_parameters[:memory]
     end
 
     if task_volumes.any?
       Volumes task_volumes
     end
 
-  end if defined? task_definition
+  end
 
   service_loadbalancer = []
-  if defined?(targetgroup)
+  targetgroup = external_parameters.fetch(:targetgroup, {})
+  unless targetgroup.empty?
 
     if targetgroup.has_key?('rules')
 
@@ -291,15 +290,17 @@ CloudFormation do
   end
 
   sg_name = 'SecurityGroupBackplane'
-  if ((defined? security_group) && (security_group.any?))
+  security_group = external_parameters.fetch(:security_group, [])
+  if security_group.any?
     EC2_SecurityGroup('ServiceSecurityGroup') do
       VpcId Ref('VPCId')
-      GroupDescription "#{component_name} fargate service"
+      GroupDescription "#{external_parameters[:component_name]} fargate service"
       SecurityGroupIngress sg_create_rules(security_group, ip_blocks)
     end
     sg_name = 'ServiceSecurityGroup'
   end
 
+  task_ingress_rules = external_parameters.fetch(:task_ingress_rules, [])
   task_ingress_rules.each do |rule|
 
     EC2_SecurityGroupIngress(:AllowConnectionBetweenContainerAndLB) {
@@ -311,9 +312,10 @@ CloudFormation do
       ToPort rule['to_port']
     }
 
-  end if defined? task_ingress_rules
+  end
 
-  if defined? task_definition
+  health_check_grace_period = external_parameters.fetch(:health_check_grace_period, nil)
+  unless task_definition.empty?
     ECS_Service('Service') do
       Cluster Ref("EcsCluster")
       DesiredCount Ref('DesiredCount')
@@ -322,22 +324,20 @@ CloudFormation do
           MaximumPercent: Ref('MaximumPercent')
       })
       TaskDefinition Ref('Task')
-      Property('HealthCheckGracePeriodSeconds', health_check_grace_period) if defined? health_check_grace_period
-      Property('LaunchType', "FARGATE")
+      HealthCheckGracePeriodSeconds health_check_grace_period unless health_check_grace_period.nil?
+      LaunchType "FARGATE"
 
       if service_loadbalancer.any?
         LoadBalancers service_loadbalancer
       end
 
-      Property('NetworkConfiguration',
-        ({
-          AwsvpcConfiguration: {
-            AssignPublicIp: public_ip ? "ENABLED" : "DISABLED",
-            SecurityGroups: [ Ref(sg_name) ],
-            Subnets: FnSplit(',', Ref('Subnets'))
-          }
-        })
-      )
+      NetworkConfiguration ({
+        AwsvpcConfiguration: {
+          AssignPublicIp: external_parameters[:public_ip] ? "ENABLED" : "DISABLED",
+          SecurityGroups: [ Ref(sg_name) ],
+          Subnets: FnSplit(',', Ref('Subnets'))
+        }
+      })
 
     end
 
@@ -347,7 +347,8 @@ CloudFormation do
     end
   end
 
-  if defined?(scaling_policy)
+  scaling_policy = external_parameters.fetch(:scaling_policy, {})
+  unless scaling_policy.empty?
 
     IAM_Role(:ServiceECSAutoScaleRole) {
       Condition 'IsScalingEnabled'
@@ -383,7 +384,7 @@ CloudFormation do
 
     ApplicationAutoScaling_ScalingPolicy(:ServiceScalingUpPolicy) {
       Condition 'IsScalingEnabled'
-      PolicyName FnJoin('-', [ Ref('EnvironmentName'), component_name, "scale-up-policy" ])
+      PolicyName FnJoin('-', [ Ref('EnvironmentName'), external_parameters[:component_name], "scale-up-policy" ])
       PolicyType "StepScaling"
       ScalingTargetId Ref(:ServiceScalingTarget)
       StepScalingPolicyConfiguration({
@@ -396,7 +397,7 @@ CloudFormation do
 
     ApplicationAutoScaling_ScalingPolicy(:ServiceScalingDownPolicy) {
       Condition 'IsScalingEnabled'
-      PolicyName FnJoin('-', [ Ref('EnvironmentName'), component_name, "scale-down-policy" ])
+      PolicyName FnJoin('-', [ Ref('EnvironmentName'), external_parameters[:component_name], "scale-down-policy" ])
       PolicyType 'StepScaling'
       ScalingTargetId Ref(:ServiceScalingTarget)
       StepScalingPolicyConfiguration({
@@ -420,7 +421,7 @@ CloudFormation do
 
     CloudWatch_Alarm(:ServiceScaleUpAlarm) {
       Condition 'IsScalingEnabled'
-      AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} ecs scale up alarm"])
+      AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{external_parameters[:component_name]} ecs scale up alarm"])
       MetricName scaling_policy['up']['metric_name'] || default_alarm['metric_name']
       Namespace scaling_policy['up']['namespace'] || default_alarm['namespace']
       Statistic scaling_policy['up']['statistic'] || default_alarm['statistic']
@@ -435,7 +436,7 @@ CloudFormation do
 
     CloudWatch_Alarm(:ServiceScaleDownAlarm) {
       Condition 'IsScalingEnabled'
-      AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} ecs scale down alarm"])
+      AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{external_parameters[:component_name]} ecs scale down alarm"])
       MetricName scaling_policy['down']['metric_name'] || default_alarm['metric_name']
       Namespace scaling_policy['down']['namespace'] || default_alarm['namespace']
       Statistic scaling_policy['down']['statistic'] || default_alarm['statistic']
