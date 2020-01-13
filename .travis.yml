@@ -5,7 +5,7 @@ rvm:
 install:
   - gem install cfhighlander cfn-nag
 before_script:
-  - cfndsl -u
+  - cfndsl -u 9.0.0
 script:
   - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then cfhighlander cftest --no-validate; else cfhighlander cftest; fi
   - cfn_nag_scan -i out/tests
