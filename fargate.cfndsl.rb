@@ -9,7 +9,7 @@ CloudFormation do
 
   Condition('IsScalingEnabled', FnEquals(Ref('EnableScaling'), 'true'))
 
-  definitions, task_volumes = Array.new(2){[]}
+  definitions, task_volumes, secrets, secrets_policy = Array.new(4){[]}
 
   task_definition = external_parameters.fetch(:task_definition, {})
   task_definition.each do |task_name, task|
@@ -106,6 +106,26 @@ CloudFormation do
     task_def.merge!({HealthCheck: task['healthcheck'] }) if task.key?('healthcheck')
     task_def.merge!({WorkingDirectory: task['working_dir'] }) if task.key?('working_dir')
     task_def.merge!({User: task['user'] }) if task.key?('user')
+
+    if task.key?('secrets')
+      
+      if task['secrets'].key?('ssm')
+        secrets.push *task['secrets']['ssm'].map {|k,v| { Name: k, ValueFrom: v.is_a?(String) && v.start_with?('/') ? FnSub("arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter#{v}") : v }}
+        resources = task['secrets']['ssm'].map {|k,v| v.is_a?(String) && v.start_with?('/') ? FnSub("arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter#{v}") : v }
+        secrets_policy.push iam_policy_allow('ssm-secrets','ssm:GetParameters', resources)
+      end
+      
+      if task['secrets'].key?('secretsmanager')
+        secrets.push *task['secrets']['secretsmanager'].map {|k,v| { Name: k, ValueFrom: v.is_a?(String) && v.start_with?('/') ? FnSub("arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:#{v}") : v }}
+        resources = task['secrets']['secretsmanager'].map {|k,v| v.is_a?(String) && v.start_with?('/') ? FnSub("arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:#{v}-*") : v }
+        secrets_policy.push iam_policy_allow('secretsmanager','secretsmanager:GetSecretValue', resources)
+      end
+      
+      if secrets.any?
+        task_def.merge!({Secrets: secrets})
+      end
+      
+    end
 
     definitions << task_def
 
