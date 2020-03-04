@@ -317,6 +317,10 @@ CloudFormation do
       GroupDescription "#{external_parameters[:component_name]} fargate service"
       SecurityGroupIngress sg_create_rules(security_group, ip_blocks)
     end
+    Output("SecurityGroup") {
+      Value(Ref('ServiceSecurityGroup'))
+      Export FnSub("${EnvironmentName}-#{export}-SecurityGroup")
+    }
     sg_name = 'ServiceSecurityGroup'
   end
 
