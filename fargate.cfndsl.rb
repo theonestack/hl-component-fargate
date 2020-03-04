@@ -165,6 +165,12 @@ CloudFormation do
     Policies(policies)
   end
 
+  execution_policies = []
+  execution_role_iam_policies = external_parameters.fetch(:execution_role_iam_policies, {})
+  execution_role_iam_policies.each do |name,policy|
+    execution_policies << iam_policy_allow(name,policy['action'],policy['resource'] || '*')
+  end
+
   IAM_Role('ExecutionRole') do
     AssumeRolePolicyDocument ({
       Statement: [
@@ -172,31 +178,16 @@ CloudFormation do
           Effect: 'Allow',
           Principal: { Service: [ 'ecs-tasks.amazonaws.com' ] },
           Action: [ 'sts:AssumeRole' ]
+        },
+        {
+          Effect: 'Allow',
+          Principal: { Service: [ 'ssm.amazonaws.com' ] },
+          Action: [ 'sts:AssumeRole' ]
         }
       ]
     })
     Path '/'
-    Policies( [
-      PolicyName: "FargateExecutionPolicy",
-      PolicyDocument:
-        {
-          Version: "2012-10-17",
-          Statement: [
-            {
-              Effect: "Allow",
-              Action: [
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-              ],
-              Resource: "*"
-            }
-          ]
-        }
-    ])
+    Policies(execution_policies)
   end
 
   ECS_TaskDefinition('Task') do

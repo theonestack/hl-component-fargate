@@ -1,0 +1,27 @@
+test_metadata:
+  type: config
+  name: iam-roles
+  description: test custom task and execution iam roles
+
+iam_policies:
+  ssmread:
+    action:
+      - ssm:DescribeParameters
+  ssmparams:
+    action:
+      - ssm:GetParameter
+      - ssm:GetParameters
+      - ssm:GetParametersByPath
+      - kms:Decrypt
+    resource:
+      - arn:aws:ssm:*:*:parameter/default*
+
+execution_role_iam_policies:
+  ssmparams:
+    action:
+      - ssm:GetParameter
+      - ssm:GetParameters
+      - ssm:GetParametersByPath
+      - kms:Decrypt
+    resource:
+      - arn:aws:ssm:*:*:parameter/default*
