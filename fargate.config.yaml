@@ -5,6 +5,16 @@ log_retention: 7
 
 public_ip: false
 
+execution_role_iam_policies:
+  fargate_execution_policy:
+    action:
+      - ecr:GetAuthorizationToken
+      - ecr:BatchCheckLayerAvailability
+      - ecr:GetDownloadUrlForLayer
+      - ecr:BatchGetImage
+      - logs:CreateLogStream
+      - logs:PutLogEvents
+
 # health_check_grace_period: 60
 #
 # cpu: 256
